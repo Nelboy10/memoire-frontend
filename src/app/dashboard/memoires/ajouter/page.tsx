@@ -15,14 +15,8 @@ interface MemoireFormData {
   fichier: File | null;
 }
 
-interface ApiError {
-  response?: {
-    status?: number;
-    data?: any;
-  };
-}
-
 export default function AjouterMemoire() {
+  const { user } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState<MemoireFormData>({
     titre: '',
@@ -30,7 +24,7 @@ export default function AjouterMemoire() {
     mots_cles: '',
     filiere: '',
     annee_soumission: new Date().getFullYear().toString(),
-    est_public: false,
+    est_public: false, // Changé à false par défaut (doit être validé)
     fichier: null,
   });
   const [loading, setLoading] = useState(false);
@@ -41,8 +35,15 @@ export default function AjouterMemoire() {
     setLoading(true);
     setError(null);
 
+    // Validation
     if (!formData.fichier) {
       setError('Veuillez sélectionner un fichier');
+      setLoading(false);
+      return;
+    }
+
+    if (!user) {
+      setError('Vous devez être connecté pour déposer un mémoire');
       setLoading(false);
       return;
     }
@@ -50,28 +51,42 @@ export default function AjouterMemoire() {
     try {
       const submitData = new FormData();
       
+      // Ajouter les champs textuels
       submitData.append('titre', formData.titre);
       submitData.append('resume', formData.resume);
       submitData.append('mots_cles', formData.mots_cles);
       submitData.append('filiere', formData.filiere);
       submitData.append('annee_soumission', formData.annee_soumission);
       submitData.append('est_public', formData.est_public.toString());
+      
+      // Ajouter le fichier
       submitData.append('fichier', formData.fichier);
 
-      await api.post('/etudiant/deposer-memoire/', submitData, {
+      console.log('Envoi du mémoire...', {
+        titre: formData.titre,
+        filiere: formData.filiere,
+        annee: formData.annee_soumission,
+        est_public: formData.est_public,
+        fichier: formData.fichier.name
+      });
+
+      // Utiliser l'endpoint étudiant spécifique
+      const response = await api.post('/etudiant/deposer-memoire/', submitData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+
+      console.log('Réponse du serveur:', response.data);
       
       setError(null);
       router.push('/dashboard/memoires');
-    } catch (err: unknown) {
-      console.error('Erreur détaillée:', err);
-      const apiError = err as ApiError;
+    } catch (error: any) {
+      console.error('Erreur détaillée:', error);
       
-      if (apiError.response?.data) {
-        const errors = apiError.response.data;
+      // Gestion détaillée des erreurs
+      if (error.response?.data) {
+        const errors = error.response.data;
         if (typeof errors === 'object') {
           const errorMessages = Object.values(errors).flat().join(', ');
           setError(`Erreur de validation: ${errorMessages}`);
@@ -80,9 +95,9 @@ export default function AjouterMemoire() {
         } else {
           setError('Erreur lors du dépôt du mémoire');
         }
-      } else if (apiError.response?.status === 403) {
+      } else if (error.response?.status === 403) {
         setError('Accès refusé. Votre compte étudiant a peut-être expiré.');
-      } else if (apiError.response?.status === 400) {
+      } else if (error.response?.status === 400) {
         setError('Données invalides. Vérifiez tous les champs.');
       } else {
         setError('Erreur de connexion au serveur');
@@ -95,11 +110,13 @@ export default function AjouterMemoire() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Vérifier la taille du fichier (max 20MB)
       if (file.size > 20 * 1024 * 1024) {
         setError('Le fichier ne doit pas dépasser 20MB');
         return;
       }
       
+      // Vérifier le type de fichier
       const allowedTypes = ['application/pdf', 
                            'application/msword', 
                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -115,15 +132,14 @@ export default function AjouterMemoire() {
     }
   };
 
-  const { user } = useAuth();
-
+  // Vérifier si l'utilisateur est un étudiant
   if (user?.role !== 'etudiant') {
     return (
-      <div className="p-4 sm:p-6">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6 text-center">
-            <h2 className="text-lg sm:text-xl font-bold text-red-800 mb-2">Accès non autorisé</h2>
-            <p className="text-red-600 text-sm sm:text-base">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <h2 className="text-xl font-bold text-red-800 mb-2">Accès non autorisé</h2>
+            <p className="text-red-600">
               Cette fonctionnalité est réservée aux étudiants.
             </p>
           </div>
@@ -133,28 +149,24 @@ export default function AjouterMemoire() {
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Déposer un mémoire</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+          <h1 className="text-2xl font-bold text-gray-900">Déposer un mémoire</h1>
+          <p className="text-gray-600 mt-1">
             Remplissez les informations concernant votre mémoire
           </p>
         </div>
 
-        {/* Formulaire principal */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6 text-sm sm:text-base">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">
               {error}
             </div>
           )}
 
-          {/* Grille responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-            {/* Titre - Pleine largeur */}
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="md:col-span-2">
               <label htmlFor="titre" className="block text-sm font-medium text-gray-700 mb-1">
                 Titre du mémoire *
               </label>
@@ -162,14 +174,13 @@ export default function AjouterMemoire() {
                 type="text"
                 id="titre"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={formData.titre}
                 onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                 placeholder="Titre complet de votre mémoire"
               />
             </div>
 
-            {/* Filière */}
             <div>
               <label htmlFor="filiere" className="block text-sm font-medium text-gray-700 mb-1">
                 Filière *
@@ -178,14 +189,13 @@ export default function AjouterMemoire() {
                 type="text"
                 id="filiere"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={formData.filiere}
                 onChange={(e) => setFormData({ ...formData, filiere: e.target.value })}
                 placeholder="Informatique, Gestion, Marketing, etc."
               />
             </div>
 
-            {/* Année de soumission */}
             <div>
               <label htmlFor="annee_soumission" className="block text-sm font-medium text-gray-700 mb-1">
                 Année de soumission *
@@ -196,14 +206,13 @@ export default function AjouterMemoire() {
                 required
                 min="2000"
                 max={new Date().getFullYear()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={formData.annee_soumission}
                 onChange={(e) => setFormData({ ...formData, annee_soumission: e.target.value })}
               />
             </div>
 
-            {/* Mots-clés - Pleine largeur */}
-            <div className="lg:col-span-2">
+            <div className="md:col-span-2">
               <label htmlFor="mots_cles" className="block text-sm font-medium text-gray-700 mb-1">
                 Mots-clés *
               </label>
@@ -211,7 +220,7 @@ export default function AjouterMemoire() {
                 type="text"
                 id="mots_cles"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={formData.mots_cles}
                 onChange={(e) => setFormData({ ...formData, mots_cles: e.target.value })}
                 placeholder="Séparés par des virgules (ex: intelligence artificielle, machine learning, données)"
@@ -219,7 +228,6 @@ export default function AjouterMemoire() {
             </div>
           </div>
 
-          {/* Résumé */}
           <div className="mb-6">
             <label htmlFor="resume" className="block text-sm font-medium text-gray-700 mb-1">
               Résumé *
@@ -227,20 +235,19 @@ export default function AjouterMemoire() {
             <textarea
               id="resume"
               required
-              rows={5}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-vertical min-h-[120px]"
+              rows={6}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={formData.resume}
               onChange={(e) => setFormData({ ...formData, resume: e.target.value })}
               placeholder="Décrivez brièvement le contenu de votre mémoire, les objectifs, la méthodologie et les résultats principaux..."
             />
           </div>
 
-          {/* Checkbox public */}
           <div className="mb-6">
             <label className="flex items-start">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 flex-shrink-0"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1"
                 checked={formData.est_public}
                 onChange={(e) => setFormData({ ...formData, est_public: e.target.checked })}
               />
@@ -255,15 +262,14 @@ export default function AjouterMemoire() {
             </label>
           </div>
 
-          {/* Upload de fichier */}
           <div className="mb-6">
             <label htmlFor="fichier" className="block text-sm font-medium text-gray-700 mb-1">
               Fichier du mémoire *
             </label>
-            <div className="mt-1 flex justify-center px-4 sm:px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-2 text-center">
-                <Upload className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" />
-                <div className="flex flex-col sm:flex-row text-sm text-gray-600 justify-center items-center">
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div className="space-y-1 text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="flex text-sm text-gray-600">
                   <label
                     htmlFor="fichier"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500"
@@ -279,32 +285,26 @@ export default function AjouterMemoire() {
                       onChange={handleFileChange}
                     />
                   </label>
-                  <p className="mt-1 sm:mt-0 sm:pl-1">ou glissez-déposez</p>
+                  <p className="pl-1">ou glissez-déposez</p>
                 </div>
                 <p className="text-xs text-gray-500">
-                  PDF, DOC, DOCX jusqu&apos;à 20MB
+                  PDF, DOC, DOCX jusqu'à 20MB
                 </p>
                 {formData.fichier && (
-                  <p className="text-sm text-green-600 font-medium flex items-center justify-center flex-wrap">
-                    <span className="mr-1">✓</span>
-                    <span className="truncate max-w-[200px] sm:max-w-none">
-                      Fichier sélectionné: {formData.fichier.name} 
-                    </span>
-                    <span className="ml-1 text-xs">
-                      ({(formData.fichier.size / (1024 * 1024)).toFixed(2)} MB)
-                    </span>
+                  <p className="text-sm text-green-600 font-medium">
+                    ✓ Fichier sélectionné: {formData.fichier.name} 
+                    ({(formData.fichier.size / (1024 * 1024)).toFixed(2)} MB)
                   </p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Boutons d'action */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end space-y-3 sm:space-y-0 space-y-reverse sm:space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base mt-3 sm:mt-0"
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               disabled={loading}
             >
               Annuler
@@ -312,7 +312,7 @@ export default function AjouterMemoire() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-sm sm:text-base w-full sm:w-auto"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
               {loading ? (
                 <>
@@ -321,7 +321,7 @@ export default function AjouterMemoire() {
                 </>
               ) : (
                 <>
-                  <BookOpen className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <BookOpen className="h-4 w-4 mr-2" />
                   Déposer le mémoire
                 </>
               )}
@@ -331,8 +331,8 @@ export default function AjouterMemoire() {
 
         {/* Informations importantes */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">Informations importantes</h3>
-          <ul className="text-sm text-blue-700 space-y-1 text-xs sm:text-sm">
+          <h3 className="font-semibold text-blue-800 mb-2">Informations importantes</h3>
+          <ul className="text-sm text-blue-700 space-y-1">
             <li>• Votre mémoire sera soumis à validation par la secrétaire de votre entité</li>
             <li>• Le fichier doit être au format PDF ou Word</li>
             <li>• La taille maximale autorisée est de 20MB</li>

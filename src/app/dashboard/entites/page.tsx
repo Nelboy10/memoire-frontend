@@ -5,15 +5,6 @@ import { api } from '../../lib/api';
 import { Entite } from '../../types';
 import { Building, Plus, Edit, Trash2, Users } from 'lucide-react';
 
-interface ApiError {
-  response?: {
-    status: number;
-    data?: {
-      error?: string;
-    };
-  };
-}
-
 export default function EntitesPage() {
   const { user } = useAuth();
   const [entites, setEntites] = useState<Entite[]>([]);
@@ -63,11 +54,10 @@ export default function EntitesPage() {
         console.error('Invalid data format after processing:', entitesData);
         setEntites([]);
       }
-    } catch (err: unknown) {
-      console.error('Error fetching entites:', err);
-      const apiError = err as ApiError;
-      if (apiError.response?.status === 403) {
-        setError('Accès refusé. Vous n&apos;avez pas les permissions nécessaires.');
+    } catch (error: any) {
+      console.error('Error fetching entites:', error);
+      if (error.response?.status === 403) {
+        setError('Accès refusé. Vous n\'avez pas les permissions nécessaires.');
       } else {
         setError('Erreur lors du chargement des entités');
       }
@@ -94,13 +84,12 @@ export default function EntitesPage() {
       setEditingId(null);
       setShowForm(false);
       fetchEntites();
-    } catch (err: unknown) {
-      console.error('Error saving entite:', err);
-      const apiError = err as ApiError;
-      if (apiError.response?.status === 403) {
-        setError('Accès refusé. Vous n&apos;avez pas les permissions pour effectuer cette action.');
+    } catch (error: any) {
+      console.error('Error saving entite:', error);
+      if (error.response?.status === 403) {
+        setError('Accès refusé. Vous n\'avez pas les permissions pour effectuer cette action.');
       } else {
-        setError(`Erreur lors de ${editingId ? 'la modification' : 'la création'} de l&apos;entité`);
+        setError(`Erreur lors de ${editingId ? 'la modification' : 'la création'} de l'entité`);
       }
     }
   };
@@ -129,11 +118,10 @@ export default function EntitesPage() {
       setError('');
       await api.delete(`/entites/${id}/`);
       setEntites(entites.filter(e => e.id !== id));
-    } catch (err: unknown) {
-      console.error('Error deleting entite:', err);
-      const apiError = err as ApiError;
-      if (apiError.response?.status === 403) {
-        setError('Accès refusé. Vous n&apos;avez pas les permissions pour supprimer cette entité.');
+    } catch (error: any) {
+      console.error('Error deleting entite:', error);
+      if (error.response?.status === 403) {
+        setError('Accès refusé. Vous n\'avez pas les permissions pour supprimer cette entité.');
       } else {
         setError('Erreur lors de la suppression');
       }
@@ -193,12 +181,12 @@ export default function EntitesPage() {
       {showForm && (
         <div className="bg-white p-6 rounded-lg shadow-sm border mb-6">
           <h3 className="text-lg font-semibold mb-4">
-            {editingId ? 'Modifier l&apos;Entité' : 'Nouvelle Entité'}
+            {editingId ? 'Modifier l\'Entité' : 'Nouvelle Entité'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nom de l&apos;entité *
+                Nom de l'entité *
               </label>
               <input
                 type="text"

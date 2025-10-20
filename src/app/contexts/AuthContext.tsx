@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, LoginCredentials } from '../types';
 import { authService } from '../services/authService';
 import { useRouter } from 'next/navigation';
@@ -21,10 +21,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Déplacer la fonction dans un useCallback pour éviter les dépendances cycliques
-  const redirectBasedOnRole = useCallback((role: string) => {
-    if (typeof window === 'undefined') return;
-    
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // Redirection automatique quand l'utilisateur est connecté
+  useEffect(() => {
+    if (user && !loading) {
+      redirectBasedOnRole(user.role);
+    }
+  }, [user, loading]);
+
+  const redirectBasedOnRole = (role: string) => {
     const currentPath = window.location.pathname;
     
     // Ne rediriger que si on est sur la page d'accueil ou login
@@ -44,18 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           router.push('/dashboard');
       }
     }
-  }, [router]);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // Redirection automatique quand l'utilisateur est connecté
-  useEffect(() => {
-    if (user && !loading) {
-      redirectBasedOnRole(user.role);
-    }
-  }, [user, loading, redirectBasedOnRole]);
+  };
 
   const checkAuth = async () => {
     try {
@@ -66,13 +63,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
-        } catch (err) {
+        } catch (error) {
           // Si erreur, utiliser l'utilisateur stocké et essayer de rafraîchir plus tard
           setUser(storedUser);
         }
       }
-    } catch (err) {
-      console.error('Auth check error:', err);
+    } catch (error) {
+      console.error('Auth check error:', error);
       localStorage.removeItem('user');
     } finally {
       setLoading(false);
@@ -87,10 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await authService.login(credentials);
       setUser(data.user);
       // La redirection se fera automatiquement via l'useEffect
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : 'Erreur de connexion';
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Erreur de connexion';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -105,8 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authService.logout();
       setUser(null);
       router.push('/');
-    } catch (err) {
-      console.error('Logout error:', err);
+    } catch (error) {
+      console.error('Logout error:', error);
     } finally {
       setLoading(false);
     }

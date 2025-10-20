@@ -17,20 +17,15 @@ import {
   Clock,
   Calendar,
   Plus,
+  FileText,
   Menu,
   X
 } from 'lucide-react';
 
-// Définir un type correct pour les icônes Lucide
-type LucideIcon = React.ComponentType<{
-  className?: string;
-  size?: number;
-}>;
-
 interface NavigationItem {
   name: string;
   href: string;
-  icon: LucideIcon;
+  icon: any;
 }
 
 export default function Sidebar() {
@@ -47,7 +42,6 @@ export default function Sidebar() {
         setIsCollapsed(false);
       }
     };
-    
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -58,6 +52,11 @@ export default function Sidebar() {
     window.location.href = '/';
   };
 
+  // Navigation de base
+  const baseNavigation: NavigationItem[] = [
+   
+  ];
+
   // Navigation par rôle
   const roleNavigation: Record<string, NavigationItem[]> = {
     admin_general: [
@@ -67,7 +66,7 @@ export default function Sidebar() {
       { name: 'Statistiques', href: '/dashboard/statistiques', icon: BarChart3 },
       { name: 'Téléchargements', href: '/dashboard/telechargements', icon: Download },
       { name: 'Mon Profil', href: '/dashboard/profil', icon: User },
-      { name: 'Mémoires', href: '/dashboard/memoires', icon: BookOpen },
+       { name: 'Mémoires', href: '/dashboard/memoires', icon: BookOpen },
     ],
     admin_entite: [
       { name: 'Tableau de bord', href: '/dashboard', icon: Home },
@@ -83,6 +82,7 @@ export default function Sidebar() {
       { name: 'Créer Compte Étudiant', href: '/dashboard/secretaire/creer-compte', icon: UserPlus },
       { name: 'Comptes Expirés', href: '/dashboard/secretaire/etudiants-expires', icon: Calendar },
       { name: 'Téléchargements', href: '/dashboard/telechargements', icon: Download },
+      
     ],
     etudiant: [
       { name: 'Mon Dashboard', href: '/dashboard/etudiant', icon: Home },
@@ -93,13 +93,14 @@ export default function Sidebar() {
 
   // Navigation personnelle
   const personalNavigation: NavigationItem[] = [
+    
     { name: 'Paramètres', href: '/dashboard/parametres', icon: Settings },
   ];
 
   // Génération de la navigation en fonction du rôle
   const getNavigation = (): NavigationItem[] => {
     const roleNav = user?.role ? roleNavigation[user.role] || [] : [];
-    return [...roleNav, ...personalNavigation];
+    return [...baseNavigation, ...roleNav, ...personalNavigation];
   };
 
   const filteredNavigation = getNavigation();

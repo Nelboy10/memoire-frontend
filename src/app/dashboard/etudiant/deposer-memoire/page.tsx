@@ -14,15 +14,8 @@ interface MemoireFormData {
   fichier: File | null;
 }
 
-interface ApiError {
-  response?: {
-    data?: {
-      error?: string;
-    };
-  };
-}
-
 export default function DeposerMemoire() {
+  const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +48,7 @@ export default function DeposerMemoire() {
       submitData.append('annee_soumission', formData.annee_soumission);
       submitData.append('fichier', formData.fichier);
 
-      await api.post('/etudiant/deposer-memoire/', submitData, {
+      const response = await api.post('/etudiant/deposer-memoire/', submitData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -63,12 +56,11 @@ export default function DeposerMemoire() {
 
       alert('Mémoire déposé avec succès! Il est maintenant en attente de validation par la secrétaire.');
       router.push('/dashboard/etudiant/mes-memoires');
-    } catch (err: unknown) {
-      const apiError = err as ApiError;
-      if (apiError.response?.data?.error === 'Compte expiré') {
+    } catch (error: any) {
+      if (error.response?.data?.error === 'Compte expiré') {
         setError('Votre compte a expiré. Contactez la secrétaire pour le prolonger.');
       } else {
-        setError(apiError.response?.data?.error || 'Erreur lors du dépôt du mémoire');
+        setError(error.response?.data?.error || 'Erreur lors du dépôt du mémoire');
       }
     } finally {
       setLoading(false);
@@ -97,11 +89,11 @@ export default function DeposerMemoire() {
 
   if (error && error.includes('expiré')) {
     return (
-      <div className="p-4 sm:p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6 text-center max-w-2xl mx-auto">
-          <h2 className="text-lg sm:text-xl font-semibold text-red-800 mb-2">Compte expiré</h2>
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Compte expiré</h2>
           <p className="text-red-600 mb-4">{error}</p>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <p className="text-gray-600">
             Contactez la secrétaire de votre entité pour prolonger votre compte.
           </p>
         </div>
@@ -110,40 +102,30 @@ export default function DeposerMemoire() {
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header avec navigation */}
         <div className="flex items-center mb-6">
           <button
             onClick={() => router.back()}
-            className="mr-3 sm:mr-4 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-            aria-label="Retour"
+            className="mr-4 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-              Déposer un Mémoire
-            </h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">
-              Remplissez les informations concernant votre mémoire
-            </p>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Déposer un Mémoire</h1>
+            <p className="text-gray-600 mt-1">Remplissez les informations concernant votre mémoire</p>
           </div>
         </div>
 
-        {/* Message d'erreur */}
-        {error && !error.includes('expiré') && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6 text-sm sm:text-base">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">
             {error}
           </div>
         )}
 
-        {/* Formulaire principal */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          {/* Grille responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-            {/* Titre du mémoire - Pleine largeur */}
-            <div className="lg:col-span-2">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="md:col-span-2">
               <label htmlFor="titre" className="block text-sm font-medium text-gray-700 mb-2">
                 Titre du mémoire *
               </label>
@@ -151,14 +133,13 @@ export default function DeposerMemoire() {
                 type="text"
                 id="titre"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.titre}
                 onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                placeholder="Ex: Étude sur l&apos;impact des nouvelles technologies..."
+                placeholder="Ex: Étude sur l'impact des nouvelles technologies..."
               />
             </div>
 
-            {/* Filière */}
             <div>
               <label htmlFor="filiere" className="block text-sm font-medium text-gray-700 mb-2">
                 Filière *
@@ -167,14 +148,13 @@ export default function DeposerMemoire() {
                 type="text"
                 id="filiere"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.filiere}
                 onChange={(e) => setFormData({ ...formData, filiere: e.target.value })}
                 placeholder="Ex: Informatique, Gestion, etc."
               />
             </div>
 
-            {/* Année de soumission */}
             <div>
               <label htmlFor="annee_soumission" className="block text-sm font-medium text-gray-700 mb-2">
                 Année de soumission *
@@ -185,14 +165,13 @@ export default function DeposerMemoire() {
                 required
                 min="2000"
                 max={new Date().getFullYear()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.annee_soumission}
                 onChange={(e) => setFormData({ ...formData, annee_soumission: e.target.value })}
               />
             </div>
 
-            {/* Mots-clés - Pleine largeur */}
-            <div className="lg:col-span-2">
+            <div className="md:col-span-2">
               <label htmlFor="mots_cles" className="block text-sm font-medium text-gray-700 mb-2">
                 Mots-clés *
               </label>
@@ -200,23 +179,22 @@ export default function DeposerMemoire() {
                 type="text"
                 id="mots_cles"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.mots_cles}
                 onChange={(e) => setFormData({ ...formData, mots_cles: e.target.value })}
                 placeholder="Séparés par des virgules (Ex: technologie, innovation, développement)"
               />
             </div>
 
-            {/* Résumé - Pleine largeur */}
-            <div className="lg:col-span-2">
+            <div className="md:col-span-2">
               <label htmlFor="resume" className="block text-sm font-medium text-gray-700 mb-2">
                 Résumé *
               </label>
               <textarea
                 id="resume"
                 required
-                rows={5}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base resize-vertical min-h-[120px]"
+                rows={6}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.resume}
                 onChange={(e) => setFormData({ ...formData, resume: e.target.value })}
                 placeholder="Résumez brièvement le contenu de votre mémoire..."
@@ -224,15 +202,14 @@ export default function DeposerMemoire() {
             </div>
           </div>
 
-          {/* Upload de fichier */}
           <div className="mb-6">
             <label htmlFor="fichier" className="block text-sm font-medium text-gray-700 mb-2">
               Fichier du mémoire *
             </label>
-            <div className="mt-1 flex justify-center px-4 sm:px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-2 text-center">
-                <Upload className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" />
-                <div className="flex flex-col sm:flex-row text-sm text-gray-600 justify-center items-center">
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div className="space-y-1 text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="flex text-sm text-gray-600">
                   <label
                     htmlFor="fichier"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
@@ -248,29 +225,24 @@ export default function DeposerMemoire() {
                       onChange={handleFileChange}
                     />
                   </label>
-                  <p className="mt-1 sm:mt-0 sm:pl-1">ou glissez-déposez</p>
+                  <p className="pl-1">ou glissez-déposez</p>
                 </div>
                 <p className="text-xs text-gray-500">
-                  PDF, DOC, DOCX jusqu&apos;à 20MB
+                  PDF, DOC, DOCX jusqu'à 20MB
                 </p>
                 {formData.fichier && (
-                  <p className="text-sm text-green-600 flex items-center justify-center flex-wrap">
-                    <FileText className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate max-w-[200px] sm:max-w-none">
-                      Fichier sélectionné: {formData.fichier.name}
-                    </span>
+                  <p className="text-sm text-green-600 flex items-center justify-center">
+                    <FileText className="h-4 w-4 mr-1" />
+                    Fichier sélectionné: {formData.fichier.name}
                   </p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Information importante */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-yellow-800 mb-2 text-sm sm:text-base">
-              Information importante
-            </h4>
-            <ul className="text-sm text-yellow-700 space-y-1 text-xs sm:text-sm">
+            <h4 className="font-medium text-yellow-800 mb-2">Information importante</h4>
+            <ul className="text-sm text-yellow-700 space-y-1">
               <li>• Votre mémoire sera soumis à validation par la secrétaire</li>
               <li>• Vous serez notifié lorsque votre mémoire sera validé et rendu public</li>
               <li>• Une fois validé, votre mémoire sera accessible à tous les visiteurs</li>
@@ -278,21 +250,20 @@ export default function DeposerMemoire() {
             </ul>
           </div>
 
-          {/* Boutons d'action */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end space-y-3 sm:space-y-0 space-y-reverse sm:space-x-3">
+          <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base mt-3 sm:mt-0"
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center transition-colors text-sm sm:text-base w-full sm:w-auto"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center transition-colors"
             >
-              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+              <BookOpen className="h-5 w-5 mr-2" />
               {loading ? 'Dépôt en cours...' : 'Déposer le mémoire'}
             </button>
           </div>
