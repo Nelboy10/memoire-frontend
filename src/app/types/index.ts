@@ -8,11 +8,14 @@ export interface User {
   first_name: string;
   last_name: string;
   role: 'etudiant' | 'admin_entite' | 'admin_general' | 'secretaire';
-  entite?: Entite;
-  entite_nom?: string; // Pour faciliter l'accès au nom de l'entité
+  entite?: number; // ID de l'entité
+  entite_nom?: string; // Nom de l'entité
+  is_staff?: boolean;
   date_expiration?: string;
   is_active: boolean;
-  date_joined: string;
+  is_expired?: boolean;
+  telephone?: string;
+  date_joined?: string;
   last_login?: string;
 }
 
@@ -34,23 +37,24 @@ export interface Memoire {
   fichier: string;
   fichier_url?: string; // URL complète du fichier
   date_soumission: string;
-  annee_soumission: string;
+  annee_soumission: number;
   filiere: string;
   est_public: boolean;
   nb_telechargements: number;
-  auteur: User;
-  entite: Entite;
-  nom_auteur?: string; // Nom complet de l'auteur pour faciliter l'affichage
+  auteur: number; // ID de l'auteur
+  auteur_name: string; // Nom complet de l'auteur
+  entite: number; // ID de l'entité
+  entite_name: string; // Nom de l'entité
 }
 
 export interface DownloadLog {
   id: number;
   email: string;
   date_telechargement: string;
-  memoire: Memoire;
-  entite: Entite;
-  user_agent?: string;
-  ip_address?: string;
+  memoire: number; // ID du mémoire
+  memoire_titre: string;
+  entite: number; // ID de l'entité
+  entite_nom: string;
 }
 
 export interface Statistiques {

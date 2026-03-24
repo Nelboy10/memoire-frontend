@@ -49,7 +49,7 @@ export default function Home() {
 
   const fetchMemoires = async () => {
     try {
-      const response = await api.get('memoires/public/');
+      const response = await api.get('/memoires/public/');
       setMemoires(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching memoires:', error);
@@ -69,7 +69,7 @@ export default function Home() {
       if (filters.annee) params.append('annee', filters.annee);
       if (filters.entite) params.append('entite', filters.entite);
 
-      const response = await api.get(`memoires/search/?${params}`);
+      const response = await api.get(`/memoires/search/?${params}`);
       setMemoires(response.data.results || response.data);
     } catch (error) {
       console.error('Error searching memoires:', error);
@@ -95,7 +95,7 @@ export default function Home() {
         return;
       }
 
-      const response = await api.post(`memoires/${memoireId}/download/`, { email });
+      const response = await api.post(`/memoires/${memoireId}/download/`, { email });
       
       if (response.data.email_sent) {
         alert(` ${response.data.message}\n\nVérifiez votre boîte email (y compris les spams).`);
@@ -345,7 +345,7 @@ export default function Home() {
                         {memoire.titre}
                       </h4>
                       <p className="text-xs text-gray-500">
-                        {memoire.auteur.first_name} {memoire.auteur.last_name} • {memoire.filiere}
+                        {memoire.auteur_name} • {memoire.filiere}
                       </p>
                     </div>
                   </div>
@@ -400,7 +400,7 @@ export default function Home() {
       <div 
         className="relative bg-gray-900 min-h-[90vh] flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8)), url('https://lh3.googleusercontent.com/gps-cs-s/AC9h4nohuuVNkAZFogLIMIS416vfaQTcNHwZ6udEIn0z0jh_S9HJ1IYaRtMeaJRJWq6wfewJE-8vlCvPKBURmbwKf-CaswkpfnFcVmf-RqzfO6yZNQSfnmSHOjebkq9g_GPTi6L3XUpP=s1360-w1360-h1020-rw')`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8)), url('/background.webp')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed'
@@ -644,7 +644,7 @@ export default function Home() {
                       </p>
                       <div className="flex flex-wrap items-center gap-4">
                         <span className="font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-xl text-sm">
-                          👤 {memoire.auteur.first_name} {memoire.auteur.last_name}
+                          👤 {memoire.auteur_name}
                         </span>
                         <span className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-xl font-semibold text-sm">
                           🎓 {memoire.filiere}

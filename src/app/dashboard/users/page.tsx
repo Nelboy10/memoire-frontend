@@ -140,7 +140,7 @@ export default function UsersPage() {
       last_name: user.last_name,
       password: '', // Ne pas afficher le mot de passe existant
       role: user.role,
-      entite: user.entite?.id?.toString() || '',
+      entite: user.entite?.toString() || '',
       is_active: user.is_active
     });
     setShowForm(true);
@@ -205,7 +205,7 @@ export default function UsersPage() {
     // Admin Entité ne voit que les utilisateurs de son entité
     if (currentUser?.role === 'admin_entite') {
       filtered = filtered.filter(user => 
-        user.entite?.id === currentUser.entite?.id || user.role === 'admin_general'
+        user.entite === currentUser.entite || user.role === 'admin_general'
       );
     }
 
@@ -517,7 +517,7 @@ export default function UsersPage() {
                       {user.entite ? (
                         <div className="flex items-center">
                           <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                          {user.entite.nom}
+                          {user.entite_nom}
                         </div>
                       ) : (
                         '-'

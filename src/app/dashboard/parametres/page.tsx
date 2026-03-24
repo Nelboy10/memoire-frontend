@@ -270,7 +270,7 @@ export default function ParametresPage() {
             {user?.entite && (
               <div>
                 <p className="text-gray-600">Entité</p>
-                <p className="font-medium">{user.entite.nom}</p>
+                <p className="font-medium">{user.entite_nom}</p>
               </div>
             )}
           </div>

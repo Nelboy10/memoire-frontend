@@ -1,0 +1,10 @@
+﻿src/app/dashboard/parametres/page.tsx(273,57): error TS2339: Property 'nom' does not exist on type 'number'.
+src/app/dashboard/profil/page.tsx(336,63): error TS2339: Property 'nom' does not exist on type 'number'.
+src/app/dashboard/profil/page.tsx(337,36): error TS2339: Property 'description' does not exist on type 'number'.
+src/app/dashboard/profil/page.tsx(338,80): error TS2339: Property 'description' does not exist on type 'number'.
+src/app/dashboard/secretaire/memoires-attente/page.tsx(105,39): error TS2339: Property 'first_name' does not exist on type 'number'.
+src/app/dashboard/secretaire/memoires-attente/page.tsx(105,67): error TS2339: Property 'last_name' does not exist on type 'number'.
+src/app/dashboard/users/page.tsx(143,28): error TS2339: Property 'id' does not exist on type 'number'.
+src/app/dashboard/users/page.tsx(208,22): error TS2339: Property 'id' does not exist on type 'number'.
+src/app/dashboard/users/page.tsx(208,49): error TS2339: Property 'id' does not exist on type 'number'.
+src/app/dashboard/users/page.tsx(520,40): error TS2339: Property 'nom' does not exist on type 'number'.

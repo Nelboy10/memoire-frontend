@@ -102,7 +102,7 @@ export default function MemoiresAttente() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500 mb-4">
                     <div>
                       <span className="font-medium">Auteur:</span>{' '}
-                      {memoire.auteur.first_name} {memoire.auteur.last_name}
+                      {memoire.auteur_name}
                     </div>
                     <div>
                       <span className="font-medium">Filière:</span> {memoire.filiere}

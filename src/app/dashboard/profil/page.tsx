@@ -333,10 +333,7 @@ export default function ProfilPage() {
                     <Building className="h-5 w-5 text-gray-400 mr-3" />
                     <div>
                       <p className="text-sm text-gray-600">Entité</p>
-                      <p className="font-medium">{user.entite.nom}</p>
-                      {user.entite.description && (
-                        <p className="text-sm text-gray-600 mt-1">{user.entite.description}</p>
-                      )}
+                      <p className="font-medium">{user.entite_nom}</p>
                     </div>
                   </div>
                 </div>

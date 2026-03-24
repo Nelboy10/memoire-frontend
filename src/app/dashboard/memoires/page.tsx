@@ -37,7 +37,7 @@ export default function Memoires() {
   const fetchMemoires = async () => {
     try {
       // Utiliser l'endpoint public pour les visiteurs non authentifiés
-      const endpoint = user?.role === 'etudiant' ? 'etudiant/mes-memoires/' : 'memoires/public/';
+      const endpoint = user?.role === 'etudiant' ? '/etudiant/mes-memoires/' : '/memoires/public/';
       const response = await api.get(endpoint);
       setMemoires(response.data.results || response.data);
     } catch (error) {
@@ -49,7 +49,7 @@ export default function Memoires() {
 
   const fetchEntites = async () => {
     try {
-      const response = await api.get('entites/');
+      const response = await api.get('/entites/');
       setEntites(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching entites:', error);
@@ -58,7 +58,7 @@ export default function Memoires() {
 
   const fetchStats = async () => {
     try {
-      const response = await api.get('dashboard/stats/');
+      const response = await api.get('/dashboard/stats/');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -76,7 +76,7 @@ export default function Memoires() {
       if (filters.annee) params.append('annee', filters.annee);
       if (filters.entite) params.append('entite', filters.entite);
 
-      const response = await api.get(`memoires/search/?${params}`);
+      const response = await api.get(`/memoires/search/?${params}`);
       setMemoires(response.data.results || response.data);
     } catch (error) {
       console.error('Error searching memoires:', error);
@@ -109,7 +109,7 @@ export default function Memoires() {
           return;
         }
 
-        const response = await api.post(`memoires/${memoireId}/download/`, { email });
+        const response = await api.post(`/memoires/${memoireId}/download/`, { email });
         
         if (response.data.email_sent) {
           alert(`✅ ${response.data.message}\n\nVérifiez votre boîte email (y compris les spams).`);
@@ -359,7 +359,7 @@ export default function Memoires() {
                       {memoire.resume}
                     </p>
                     <div className="flex items-center text-sm text-gray-500 space-x-4 mb-2">
-                      <span>Auteur: {memoire.auteur.first_name} {memoire.auteur.last_name}</span>
+                      <span>Auteur: {memoire.auteur_name}</span>
                       <span>•</span>
                       <span>Filière: {memoire.filiere}</span>
                       <span>•</span>
